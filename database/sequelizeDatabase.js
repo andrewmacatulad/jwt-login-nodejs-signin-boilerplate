@@ -16,7 +16,7 @@ const opts = {
 //   }
 // });
 
-const sequelize = new Sequelize("postgres", "postgres", "asakapa", {
+const sequelize = new Sequelize("social-app", "postgres", "asakapa", {
   dialect: "postgres",
   host: "localhost",
   define: {

@@ -3,6 +3,10 @@ const passport = require("passport");
 const JwtStrategy = require("passport-jwt").Strategy;
 const ExtractJwt = require("passport-jwt").ExtractJwt;
 const GoogleStrategy = require("passport-google-oauth20").Strategy;
+const FacebookStrategy = require("passport-facebook").Strategy;
+const TwitterStrategy = require("passport-twitter").Strategy;
+const TwitchStrategy = require("passport-twitch").Strategy;
+const InstagramStrategy = require("passport-instagram").Strategy;
 const jwt = require("jsonwebtoken");
 
 const keys = require("../config/keys");
@@ -36,6 +40,7 @@ passport.use(
       callbackURL: "/auth/google/callback"
     },
     async (req, accessToken, refreshToken, profile, done) => {
+      console.log("AccessToken ", accessToken, "profileId", profile.id);
       if (!req.user) {
         let existingUser;
         try {
@@ -55,6 +60,135 @@ passport.use(
           const data = {
             email: profile.emails[0].value,
             name: profile.displayName
+          };
+
+          // jwt.sign(data, "sampleSecret", { expiresIn: 36000 }, (err, token) => {
+          //   console.log("Jwt ", jwt, " Token ", token);
+          // });
+
+          User.create(data).then(function(newUser, created) {
+            if (!newUser) {
+              return done(null, false);
+            }
+
+            if (newUser) {
+              return done(null, newUser);
+            }
+          });
+
+          // const user = await new User({
+          //   username: profile.emails[0].value,
+          //   name: profile.displayName
+          // }).save();
+          // done(null, user);
+        } catch (error) {
+          console.dir(error.message, { colors: true });
+        }
+      }
+    }
+  )
+);
+
+passport.use(
+  new FacebookStrategy(
+    {
+      clientID: keys.facebookClientID,
+      clientSecret: keys.facebookClientSecret,
+      callbackURL: "/auth/facebook/callback",
+      profileFields: [
+        "id",
+        "email",
+        "gender",
+        "displayName",
+        "profileUrl",
+        "photos"
+      ],
+      enableProof: true,
+      proxy: true
+    },
+    async (req, accessToken, refreshToken, profile, done) => {
+      // console.log("AccessToken ", accessToken, "profileId", profile.id);
+      if (!req.user) {
+        let existingUser;
+        try {
+          existingUser = await User.findOne({
+            where: { email: profile.emails[0].value }
+          });
+          // console.log(existingUser);
+        } catch (error) {
+          return done(error);
+        }
+
+        if (existingUser) {
+          return done(null, existingUser);
+        }
+
+        console.log(profile);
+        try {
+          const data = {
+            email: profile.emails[0].value,
+            name: profile.displayName,
+            fb_id: profile.id
+          };
+
+          // jwt.sign(data, "sampleSecret", { expiresIn: 36000 }, (err, token) => {
+          //   console.log("Jwt ", jwt, " Token ", token);
+          // });
+
+          User.create(data).then(function(newUser, created) {
+            if (!newUser) {
+              return done(null, false);
+            }
+
+            if (newUser) {
+              return done(null, newUser);
+            }
+          });
+
+          // const user = await new User({
+          //   username: profile.emails[0].value,
+          //   name: profile.displayName
+          // }).save();
+          // done(null, user);
+        } catch (error) {
+          console.dir(error.message, { colors: true });
+        }
+      }
+    }
+  )
+);
+
+passport.use(
+  new TwitterStrategy(
+    {
+      consumerKey: keys.twitterClientID,
+      consumerSecret: keys.twitterClientSecret,
+      callbackURL: "/auth/twitter/callback"
+      // proxy: true
+    },
+    async (req, accessToken, refreshToken, profile, done) => {
+      // console.log("AccessToken ", accessToken, "profileId", profile.id);
+      if (!req.user) {
+        let existingUser;
+        try {
+          existingUser = await User.findOne({
+            where: { email: profile.emails[0].value }
+          });
+          // console.log(existingUser);
+        } catch (error) {
+          return done(error);
+        }
+
+        if (existingUser) {
+          return done(null, existingUser);
+        }
+
+        console.log(profile);
+        try {
+          const data = {
+            email: profile.emails[0].value,
+            name: profile.displayName,
+            twitter_id: profile.id
           };
 
           // jwt.sign(data, "sampleSecret", { expiresIn: 36000 }, (err, token) => {

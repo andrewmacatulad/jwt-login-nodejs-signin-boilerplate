@@ -22,8 +22,8 @@ module.exports = app => {
     }),
     (req, res) => {
       const payload = req.user; // JWT Payload
-      console.log("Body google pass ", req.body);
-      console.log("Payload google pass ", payload.dataValues);
+      // console.log("Body google pass ", req.body);
+      // console.log("Payload google pass ", payload.dataValues);
       jwt.sign(
         payload.dataValues,
         "sampleSecret",
@@ -47,14 +47,84 @@ module.exports = app => {
     // }
   );
 
-  app.get("/auth/twitter", passport.authenticate("twitter"));
+  app.get(
+    "/auth/twitter",
+    passport.authenticate("twitter-token"),
+    (req, res) => {
+      // do something with req.user
+      // res.send(req.user ? 200 : 401);
+    }
+  );
 
   app.get(
     "/auth/twitter/callback",
-    passport.authenticate("twitter", {
-      successRedirect: "http://localhost:3000",
+    passport.authenticate("twitter-token", {
       failureRedirect: "http://localhost:3000/login"
+    }),
+    (req, res) => {
+      const payload = req.user; // JWT Payload
+      // console.log("Body google pass ", req.body);
+      // console.log("Payload google pass ", payload.dataValues);
+      jwt.sign(
+        payload.dataValues,
+        "sampleSecret",
+        { expiresIn: 36000 },
+        (err, token) => {
+          console.log("Token ", token);
+          res.cookie("test", `Bearer ${token}`, {
+            maxAge: 900000
+          });
+          res.redirect("http://localhost:3000");
+
+          // res.send({
+          //   success: true,
+          //   token: "Bearer " + token
+          // });
+        }
+      );
+    }
+  );
+
+  app.get(
+    "/auth/facebook",
+    passport.authenticate("facebook", {
+      scope: [
+        "user_friends",
+        "user_posts",
+        "manage_pages",
+        "email",
+        "user_likes"
+      ]
     })
+  );
+
+  app.get(
+    "/auth/facebook/callback",
+    passport.authenticate("facebook", {
+      failureRedirect: "/"
+    }),
+    (req, res) => {
+      const payload = req.user; // JWT Payload
+      // console.log("Body google pass ", req.body);
+      // console.log("Payload google pass ", payload.dataValues);
+      jwt.sign(
+        payload.dataValues,
+        "sampleSecret",
+        { expiresIn: 36000 },
+        (err, token) => {
+          console.log("Token ", token);
+          res.cookie("test", `Bearer ${token}`, {
+            maxAge: 900000
+          });
+          res.redirect("http://localhost:3000");
+
+          // res.send({
+          //   success: true,
+          //   token: "Bearer " + token
+          // });
+        }
+      );
+    }
   );
 
   app.get(
